@@ -1,0 +1,13 @@
+[Unit]
+Description=Monitor your Splatoon 3 battles with s3s, with auto NSO app login
+
+[Service]
+ExecStart=sh -c "yes | s3s-nso -M 300 -r"
+StandardOutput=inherit
+StandardError=inherit
+Restart=always
+
+[Install]
+WantedBy=default.target
+
+ 

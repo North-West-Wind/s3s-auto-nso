@@ -1,6 +1,10 @@
 #!/usr/bin/env sh
 
 # constants
+EMULATOR_DIR="${EMULATOR_DIR:-"$HOME/Android/Sdk/emulator"}"
+ADB_DIR="${ADB_DIR-"$HOME/Android/Sdk/platform-tools"}"
+DEVICE_NAME="${DEVICE_NAME:-"6-33-api"}"
+PROXY_PORT="${PROXY_PORT:-"8080"}"
 emulog=$(mktemp)
 mitmout='gtoken_bullettoken.txt'
 
@@ -8,12 +12,12 @@ mitmout='gtoken_bullettoken.txt'
 rm -f $mitmout
 
 # start mitmproxy
-mitmdump -q -s s3-token-extractor.py '~u GetWebServiceToken | ~u bullet_tokens' &
+mitmdump -q -p "$PROXY_PORT" -s s3-token-extractor.py '~u GetWebServiceToken | ~u bullet_tokens' &
 mitmpid=$!
 echo "Started mitmdump"
 
 # start emulator
-$HOME/Android/Sdk/emulator/emulator -avd 6-33-api -writable-system -no-window -no-audio -feature -Vulkan -http-proxy 127.0.0.1:8080 > $emulog &
+$EMULATOR_DIR/emulator -avd "$DEVICE_NAME" -writable-system -no-window -no-audio -feature -Vulkan -http-proxy "127.0.0.1:$PROXY_PORT" > $emulog &
 emupid=$!
 echo "Started emulator"
 
@@ -23,13 +27,13 @@ echo "Loaded snapshot"
 sleep 2
 
 # launch NSO
-adb shell monkey -p com.nintendo.znca 1 > /dev/null
+$ADB_DIR/adb shell monkey -p com.nintendo.znca 1 > /dev/null
 echo "Launched NSO app"
 
 # keep trying to tap if no gtoken is found
 while ! tail -n2 $mitmout | grep -qe "gToken"; do
 	sleep 1
-	adb shell input tap 270 1200
+	$ADB_DIR/adb shell input tap 270 1200
 done
 echo "Tapped into SplatNet 3"
 
@@ -38,9 +42,9 @@ tail -f -n0 $mitmout | grep -qe "bulletToken"
 echo "Obtained tokens"
 
 # emulator clean up
-adb shell input keyevent KEYCODE_APP_SWITCH
+$ADB_DIR/adb shell input keyevent KEYCODE_APP_SWITCH
 sleep 1
-adb shell input swipe 522 1647 522 90
+$ADB_DIR/adb shell input swipe 522 1647 522 90
 echo "Closed app"
 sleep 2
 

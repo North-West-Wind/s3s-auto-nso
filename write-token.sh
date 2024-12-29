@@ -1,7 +1,8 @@
 #!/usr/bin/env sh
 
+S3S_DIR=${S3S_DIR:-"$HOME/.config/s3s"}
 tmpconf=$(mktemp)
-realconf="$HOME/.config/s3s/config.txt"
+realconf="$S3S_DIR/config.txt"
 
 tokens=$(tail -n2 gtoken_bullettoken.txt | cut -d' ' -f2)
 SAVEIFS=$IFS
