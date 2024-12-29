@@ -1,7 +1,7 @@
 #!/usr/bin/env sh
 
 # constants
-emulog=/var/tmp/nso-mitm-log
+emulog=$(mktemp)
 mitmout='gtoken_bullettoken.txt'
 
 # clean up previous run
@@ -13,17 +13,17 @@ mitmpid=$!
 echo "Started mitmdump"
 
 # start emulator
-$HOME/Android/Sdk/emulator/emulator -avd 6-33-api -writable-system -feature -Vulkan -http-proxy 127.0.0.1:8080 > $emulog &
+$HOME/Android/Sdk/emulator/emulator -avd 6-33-api -writable-system -no-window -no-audio -feature -Vulkan -http-proxy 127.0.0.1:8080 > $emulog &
 emupid=$!
 echo "Started emulator"
 
 # wait for emulator to start
 tail -f -n0 $emulog | grep -qe "Successfully loaded snapshot 'default_boot'"
-echo "Emulator loaded snapshot"
+echo "Loaded snapshot"
 sleep 2
 
 # launch NSO
-adb shell monkey -p com.nintendo.znca 1
+adb shell monkey -p com.nintendo.znca 1 > /dev/null
 echo "Launched NSO app"
 
 # keep trying to tap if no gtoken is found
@@ -35,16 +35,16 @@ echo "Tapped into SplatNet 3"
 
 # wait for response to be read
 tail -f -n0 $mitmout | grep -qe "bulletToken"
-echo "Token obtained"
+echo "Obtained tokens"
 
 # emulator clean up
 adb shell input keyevent KEYCODE_APP_SWITCH
 sleep 1
 adb shell input swipe 522 1647 522 90
-echo "App closed"
+echo "Closed app"
 sleep 2
 
 # stop emulator and mitmproxy
 kill $emupid
 kill $mitmpid
-echo "Processes killed"
+echo "Killed processes"

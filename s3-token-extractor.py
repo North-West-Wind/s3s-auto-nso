@@ -10,11 +10,11 @@ import json
 
 
 def handle_web_service_token(obj):
-    return '"gToken": "{}"'.format(obj["result"]["accessToken"])
+    return 'gToken {}'.format(obj["result"]["accessToken"])
 
 
 def handle_bullet_token(obj):
-    return '"bulletToken": "{}"'.format(obj["bulletToken"])
+    return 'bulletToken {}'.format(obj["bulletToken"])
 
 
 class Splatoon3TokenExtractor:
