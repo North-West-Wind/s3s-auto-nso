@@ -42,9 +42,7 @@ tail -f -n0 $mitmout | grep -qe "bulletToken"
 echo "Obtained tokens"
 
 # emulator clean up
-$ADB_DIR/adb shell input keyevent KEYCODE_APP_SWITCH
-sleep 5
-$ADB_DIR/adb shell input swipe 522 1647 522 90
+$ADB_DIR/adb shell am force-stop com.nintendo.znca
 echo "Closed app"
 sleep 2
 
