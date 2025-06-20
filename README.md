@@ -1,25 +1,31 @@
 # s3s-auto-nso
 Automatically grabs the `gToken` and `bulletToken` from SplatNet 3 using an Android emulator.
 
+### NSO App Version Note
+Starting from the last commit, this repository works for >=3.0.1 of NSO app.  
+Some parts of `get-token.sh` came from [imc0/nso-get-data](https://github.com/imc0/nso-get-data).
+
 ## Requirements
 - Linux (unless you translate all the shell scripts here to other OSes)
 - Android Studio
-- mitmproxy
+- curl
 - jq
+- perl
+- sqlite3
 
-You need a working setup of Android Studio, mitmproxy and the NSO app to do this.
-To do so, check [this GitHub issue](https://github.com/frozenpandaman/s3s/issues/198#issuecomment-2561475617) and my [blog post](https://blog.northwestw.in/p/2024/12/28/splatnet-3-token-mitmproxy-guide).
+You need a working setup of Android Studio and the NSO app to do this.
+To do so, check [this GitHub issue](https://github.com/frozenpandaman/s3s/issues/198#issuecomment-2981210614) and my [blog post](https://blog.northwestw.in/p/2025/06/20/splatnet-3-token-guide-for).
 
 This can also work with [s3s-setup](https://github.com/North-West-Wind/s3s-setup).
 
 ## Usage
 ### Environment Variables
 There are 5 environment variables for you to configure:
-- `EMULATOR_DIR`: The directory where the `emulator` binary file of Android Studio can be found. (Default: `$HOME/Android/Sdk/emulator`)
-- `ADB_DIR`: The directory where the `adb` binary file of Android Studio can be found. (Default: `$HOME/Android/Sdk/platform-tools`)
-- `S3S_DIR`: The directory where `s3s` is set up. You most likely need to change this. (Default: `$HOME/.config/s3s`)
-- `DEVICE_NAME`: The name of the AVD you want to use. You very likely need to change this. (Default: `6-33-api`)
-- `PROXY_PORT`: The port for the proxy server. (Default: `8080`)
+- `EMULATOR` (in `get-token.sh`): The `emulator` binary file of Android Studio. (Default: `$HOME/Android/Sdk/emulator/emulator`)
+- `ADB` (in `get-token.sh`): The `adb` binary file of Android Studio can be found. (Default: `adb`)
+- `S3S_CONFIG` (in `get-token.sh`): The `config.txt` file path of `s3s`.
+- `DEVICE_NAME` (in `get-token.sh`): The name of the AVD you want to use. You very likely need to change this. (Default: `4-30-play`)
+- `S3S_DIR` (in `write-token.sh`): The directory where `s3s` is set up. You most likely need to change this. (Default: `$HOME/.config/s3s`)
 
 ### With s3s-setup
 1. Clone this repository and store it somewhere under your home directory.

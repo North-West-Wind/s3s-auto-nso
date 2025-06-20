@@ -95,22 +95,14 @@ echo "Obtained new gtoken"
 # From imc0/nso-get-data
 # Attempt to get the SplatNet web version
 nsover=""
-if [ -f "$wvfile" ]; then
-  wdate="$(stat -c %Y "$wvfile")"
-  if [ "$((wdate+48*3600))" -ge $ndate ]; then
-    read nsover < "$wvfile"
-  fi
+# try to figure out the main JS filename from SplatNet index
+js="$(curl -s "https://$snhost/" | grep -a -o 'main\.[0-9a-f]*\.js')"
+if [ -n "$js" ]; then
+  # try to parse the JS file to extract the web view version
+  nsover="$(curl -s "https://$snhost/static/js/$js" | perl -lne 'print "$2$1" if /null===\(..="([0-9a-f]{8}).{60,120}`,..=`([0-9.]+-)/;')"
 fi
-if [ -z "$nsover" ]; then
-  # try to figure out the main JS filename from SplatNet index
-  js="$(curl -s "https://$snhost/" | grep -a -o 'main\.[0-9a-f]*\.js')"
-  if [ -n "$js" ]; then
-    # try to parse the JS file to extract the web view version
-    nsover="$(curl -s "https://$snhost/static/js/$js" | perl -lne 'print "$2$1" if /null===\(..="([0-9a-f]{8}).{60,120}`,..=`([0-9.]+-)/;')"
-  fi
-  if [ -n "$nsover" ]; then echo "$nsover" > "$wvfile"
-  else echo "Warning: failed to get SplatNet web version from NSO." >&2
-  fi
+if [ -n "$nsover" ]; then echo "$nsover" > "$wvfile"
+else echo "Warning: failed to get SplatNet web version from NSO." >&2
 fi
 [ -z "$nsover" ] && nsover=$wvdefault
 
