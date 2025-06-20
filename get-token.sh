@@ -45,7 +45,7 @@ done
 mkdir -p $NSODATA
 
 # start emulator
-$EMULATOR -avd "$DEVICE_NAME" -no-audio -no-window -feature -Vulkan > $emulog &
+$EMULATOR -avd "$DEVICE_NAME" -no-audio -feature -Vulkan > $emulog &
 emupid=$!
 echo "Started emulator"
 
@@ -62,11 +62,11 @@ echo "Launched NSO app"
 gtoken=""
 tries=0
 while [ -z "$gtoken" ]; do
-	sleep 1
+	sleep 5
 	$ADB shell input tap 270 1200
 	((tries=tries+1))
 	# timeout at 60 seconds
-	if [ $tries -gt 60 ]; then
+	if [ $tries -gt 12 ]; then
 		echo "Timed out trying to get gToken. Closing app and retrying..."
 		# close app
 		$ADB shell am force-stop com.nintendo.znca
@@ -79,7 +79,8 @@ while [ -z "$gtoken" ]; do
 		tries=0
 	fi
 	# Read from Cookies
-	$ADB shell su -c "cp /data/user/0/com.nintendo.znca/app_webview/Default/Cookies /storage/emulated/0/Download/"
+	$ADB shell rm /storage/emulated/0/Download/Cookies
+	$ADB shell su -c "cp --preserve=timestamps /data/user/0/com.nintendo.znca/app_webview/Default/Cookies /storage/emulated/0/Download/"
 	$ADB pull -a /storage/emulated/0/Download/Cookies "$NSODATA/" >/dev/null
 	if [ -f "$ckfile" ]; then
 		cdate="$(stat -c %Y "$ckfile")"
@@ -136,3 +137,5 @@ sleep 2
 # stop emulator
 kill $emupid
 echo "Killed processes"
+
+rm -r "$NSODATA"
