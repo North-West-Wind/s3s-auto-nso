@@ -55,7 +55,7 @@ echo "Loaded snapshot"
 sleep 2
 
 # launch NSO
-$ADB shell monkey -p com.nintendo.znca 1 > /dev/null
+$ADB shell monkey -p com.nintendo.znca 1 >/dev/null
 echo "Launched NSO app"
 
 # keep trying to tap if no gtoken is found

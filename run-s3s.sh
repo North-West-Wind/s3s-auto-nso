@@ -9,7 +9,7 @@ while [ $running = 1 ]; do
 	s3s "$@" | tee "$s3slog"
 	#(cd <dir>; python s3s.py "$@" | tee "$s3slog")
 
-	if tail -n8 $s3slog | grep -qe "The stored tokens have expired."; then
+	if tail -n9 $s3slog | grep -qe "The stored tokens have expired."; then
 		(
 			cd "$scriptdir"
 			./get-token.sh
