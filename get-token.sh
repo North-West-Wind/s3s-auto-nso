@@ -45,7 +45,7 @@ done
 mkdir -p $NSODATA
 
 # start emulator
-$EMULATOR -avd "$DEVICE_NAME" -no-audio -feature -Vulkan > $emulog &
+$EMULATOR -avd "$DEVICE_NAME" -no-audio -no-window -feature -Vulkan > $emulog &
 emupid=$!
 echo "Started emulator"
 
