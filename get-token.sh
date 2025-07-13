@@ -8,6 +8,9 @@ DEVICE_NAME="${DEVICE_NAME:-"4-30-play"}" # For >=v3.0.1, Android 11 Google Play
 S3S_CONFIG="$HOME/.config/s3s/config.txt" # Path to s3s config
 NSODATA=$(mktemp -d)
 
+COOKIES="/data/user/0/com.nintendo.znca/app_webview/Default/Cookies"
+NONROOT="/storage/emulated/0/Download/Cookies"
+
 # constants from imc0/nso-get-data
 wvfile="$NSODATA"/nso-wv-ver.txt # File where we will cache the current SplatNet web version:
 nsodir="$NSODATA"/cookies # Directory where we will temporarily store the cookie database:
@@ -20,8 +23,8 @@ emulog=$(mktemp)
 tokenout="gtoken_bullettoken.txt"
 old_gtoken=
 
-out=$(jq .gtoken "$S3S_CONFIG" 2>&1)
-if [ "${#out}" -eq 926 ]; then
+out=$(jq -r .gtoken "$S3S_CONFIG")
+if [ $(echo $out | wc -m) -eq 927 ]; then
 	old_gtoken="$out"
 fi
 
@@ -37,7 +40,7 @@ if ! command -v "$EMULATOR" >/dev/null; then
   ok=false
 fi
 for cmd in sqlite3 curl perl; do
-  if ! command -v "$cmd" > /dev/null; then
+  if ! command -v "$cmd" >/dev/null; then
     echo "Error: $cmd is not in your path.  Install it from your distro." >&2
     ok=false
   fi
@@ -79,14 +82,15 @@ while [ -z "$gtoken" ]; do
 		tries=0
 	fi
 	# Read from Cookies
-	$ADB shell rm /storage/emulated/0/Download/Cookies
-	$ADB shell su -c "cp --preserve=timestamps /data/user/0/com.nintendo.znca/app_webview/Default/Cookies /storage/emulated/0/Download/"
-	$ADB pull -a /storage/emulated/0/Download/Cookies "$NSODATA/" >/dev/null
-	if [ -f "$ckfile" ]; then
-		cdate="$(stat -c %Y "$ckfile")"
-		ndate="$(date +%s)"
-		if [ "$((cdate+6*3600))" -ge $ndate ]; then
-			gtoken="$(sqlite3 "$NSODATA"/Cookies "select value from cookies where name='_gtoken' order by creation_utc desc limit 1;")"
+	$ADB shell rm "$NONROOT"
+	cdate="$($ADB shell su -c "stat -c %Y \"$COOKIES\"")"
+	ndate=$(date +%s)
+	if [ "$((cdate+6*3600))" -ge $ndate ]; then
+		$ADB shell su -c "cp --preserve=timestamps \"$COOKIES\" \"$NONROOT\""
+		$ADB pull -a "$NONROOT" "$NSODATA/" >/dev/null
+		gtoken="$(sqlite3 "$NSODATA"/Cookies "select value from cookies where name='_gtoken' order by creation_utc desc limit 1;")"
+		if [ "$gtoken" = "$old_gtoken" ]; then
+			gtoken=""
 		fi
 		rm "$ckfile"
 	fi
