@@ -70,29 +70,31 @@ while [ -z "$gtoken" ]; do
 	((tries=tries+1))
 	# timeout at 60 seconds
 	if [ $tries -gt 12 ]; then
-		echo "Timed out trying to get gToken. Closing app and retrying..."
-		# close app
-		$ADB shell am force-stop com.nintendo.znca
-		echo "Closed app"
-		sleep 2
-		# re-launch app
-		$ADB shell monkey -p com.nintendo.znca 1 >/dev/null
-		echo "Launched NSO app"
-		# reset counter
-		tries=0
-	fi
-	# Read from Cookies
-	$ADB shell rm "$NONROOT"
-	cdate="$($ADB shell su -c "stat -c %Y \"$COOKIES\"")"
-	ndate=$(date +%s)
-	if [ "$((cdate+6*3600))" -ge $ndate ]; then
-		$ADB shell su -c "cp --preserve=timestamps \"$COOKIES\" \"$NONROOT\""
-		$ADB pull -a "$NONROOT" "$NSODATA/" >/dev/null
-		gtoken="$(sqlite3 "$NSODATA"/Cookies "select value from cookies where name='_gtoken' order by creation_utc desc limit 1;")"
-		if [ "$gtoken" = "$old_gtoken" ]; then
-			gtoken=""
+		echo "Timed out trying to get gToken. We'll try the old one anyway"
+		if [ -f "$NSODATA/Cookies" ]; then
+			gtoken=$(sqlite3 $NSODATA/Cookies "select value from cookies where name='_gtoken' order by creation_utc desc limit 1;")
 		fi
-		rm "$ckfile"
+		if [ -z "$gtoken" ]; then
+			gtoken="$old_gtoken"
+		fi
+		if [ -z "$gtoken" ]; then
+			echo "No gtoken available"
+			exit 1
+		fi
+	else
+		# Read from Cookies
+		$ADB shell rm "$NONROOT"
+		cdate="$($ADB shell su -c "stat -c %Y \"$COOKIES\"")"
+		ndate=$(date +%s)
+		if [ "$((cdate+6*3600))" -ge $ndate ]; then
+			rm -f "$ckfile"
+			$ADB shell su -c "cp --preserve=timestamps \"$COOKIES\" \"$NONROOT\""
+			$ADB pull -a "$NONROOT" "$NSODATA/" >/dev/null
+			gtoken="$(sqlite3 "$NSODATA"/Cookies "select value from cookies where name='_gtoken' order by creation_utc desc limit 1;")"
+			if [ "$gtoken" = "$old_gtoken" ]; then
+				gtoken=""
+			fi
+		fi
 	fi
 done
 echo "Obtained new gtoken"
